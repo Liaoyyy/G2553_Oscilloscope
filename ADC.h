@@ -11,8 +11,9 @@
 #include <msp430.h>
 
 //start ADC
-#define ADC_START (ADC10CTL0 |= ENC + ADC10SC)
-
+#define ADC_START (ADC10CTL0 |= ADC10IE + ENC + ADC10SC)
+//disable ADC
+#define ADC_STOP (ADC10CTL0 &= ~ADC10IE)
 
 void ADC_initConfig(void);
 

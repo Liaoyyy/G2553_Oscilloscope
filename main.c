@@ -21,9 +21,8 @@ int adc_data_buf[128];
  */
 int main(void)
 {
-    //int adc_data_buf[128];
+    int adc_last_data_buf[128];
     int cnt = 1;
-    int i =0;
 	WDTCTL = WDTPW | WDTHOLD;	// stop watchdog timer
 	Clk_initConfig();
 	GPIO_initConfig();
@@ -45,12 +44,21 @@ int main(void)
         if(printFlag==1)
         {
             printFlag=-4;
-            float temp;
+            int temp;
+            _disable_interrupt();
             for(cnt=10;cnt<10+128;cnt++)
             {
-                //draw_point(cnt,adc_data_buf)
+                //erase the last wave
+                temp=(1024-adc_last_data_buf[cnt-10])/11+10;
+                draw_point(cnt,temp,0x00);
+
+                temp=(1024-adc_data_buf[cnt-10])/11+10;
+
+                adc_last_data_buf[cnt-10]=adc_data_buf[cnt-10];
+                draw_point(cnt,temp,YELLOW);
             }
-            //ADC_START;
+            _enable_interrupt();
+            ADC_START;
         }
 
     }
@@ -89,6 +97,7 @@ __interrupt void TIMER0_ISR(void)
                 }else
                 {
                     dataNum = 0;
+                    printFlag=1;
                 }
                 break;
             }
