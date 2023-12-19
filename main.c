@@ -14,14 +14,13 @@ void Clk_initConfig(void);
 int printFlag=-4;
 float freq=0.0; //frequency
 int dataNum=0;
-int adc_data_buf[128];
+int adc_data_buf[120];
 
 /**
  * main.c
  */
 int main(void)
 {
-    int adc_last_data_buf[128];
     int cnt = 1;
 	WDTCTL = WDTPW | WDTHOLD;	// stop watchdog timer
 	Clk_initConfig();
@@ -45,19 +44,21 @@ int main(void)
         {
             printFlag=-4;
             int temp;
-            _disable_interrupt();
-            for(cnt=10;cnt<10+128;cnt++)
+            int temp2;
+            //_disable_interrupt();
+            for(cnt=15;cnt<15+119;cnt++)
             {
                 //erase the last wave
-                temp=(1024-adc_last_data_buf[cnt-10])/11+10;
-                draw_point(cnt,temp,0x00);
+                //draw_rectangle(0,0,160,110,0L);
 
                 temp=(1024-adc_data_buf[cnt-10])/11+10;
+                temp2=(1024-adc_data_buf[cnt-9])/11+10;
 
-                adc_last_data_buf[cnt-10]=adc_data_buf[cnt-10];
-                draw_point(cnt,temp,YELLOW);
+                //adc_last_data_buf[cnt-10]=adc_data_buf[cnt-10];
+                //draw_point(cnt,temp,YELLOW);
+                draw_line(cnt,cnt+1,temp,temp2,YELLOW);
             }
-            _enable_interrupt();
+            //_enable_interrupt();
             ADC_START;
         }
 
@@ -83,7 +84,6 @@ __interrupt void TIMER0_ISR(void)
                 {
                     sum = sum + ADC_Buf[i];
                 }
-                adcFlag=1;
                 ADC10SA=(unsigned short)ADC_Buf;
 
                 adc_data_buf[dataNum]=sum/16;
@@ -91,7 +91,7 @@ __interrupt void TIMER0_ISR(void)
                 dataNum++;
 
                 //if the adc_data_buf is not full, continue to sample
-                if(dataNum<128)
+                if(dataNum<120)
                 {
                     ADC_START;
                 }else

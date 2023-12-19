@@ -31,6 +31,7 @@ void setAddress(u8 x1,u8 x2, u8 y1, u8 y2);
 void LCD_clear(void);
 void Rotate(void);
 void draw_point(u8 x, u8 y, unsigned long Color);
+void draw_line(u8 x1,u8 x2, u8 y1, u8 y2,unsigned long Color);
 void draw_rectangle(u8 x, u8 y,u8 width, u8 height,unsigned long Color);
 void show_char(u8 x, u8 y,u8 letterIndex,u8 Color,u8 sizey);
 void show_string(u8 x, u8 y,u8 *p,u8 Color,u8 sizey);

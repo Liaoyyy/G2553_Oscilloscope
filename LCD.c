@@ -81,6 +81,41 @@ void draw_point(u8 x, u8 y, unsigned long Color)
     sendCommand(NOP);
 }
 
+void draw_line(u8 x1,u8 x2, u8 y1, u8 y2,unsigned long Color)
+{
+    u16 t;
+    int xerr=0,yerr=0,delta_x,delta_y,distance;
+    int incx,incy,uRow,uCol;
+    delta_x=x2-x1; //计算坐标增量
+    delta_y=y2-y1;
+    uRow=x1;//画线起点坐标
+    uCol=y1;
+    if(delta_x>0)incx=1; //设置单步方向
+    else if (delta_x==0)incx=0;//垂直线
+    else {incx=-1;delta_x=-delta_x;}
+    if(delta_y>0)incy=1;
+    else if (delta_y==0)incy=0;//水平线
+    else {incy=-1;delta_y=-delta_y;}
+    if(delta_x>delta_y)distance=delta_x; //选取基本增量坐标轴
+    else distance=delta_y;
+    for(t=0;t<distance+1;t++)
+    {
+        draw_point(uRow,uCol,Color);//画点
+        xerr+=delta_x;
+        yerr+=delta_y;
+        if(xerr>distance)
+        {
+            xerr-=distance;
+            uRow+=incx;
+        }
+        if(yerr>distance)
+        {
+            yerr-=distance;
+            uCol+=incy;
+        }
+    }
+}
+
 /*
  * draw a rectangle
  * x: start column(0-160)
