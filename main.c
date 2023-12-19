@@ -9,63 +9,89 @@
 
 void Clk_initConfig(void);
 
+//int adc_data_buf[128];//record the voltage data to be printed
+
 int printFlag=-4;
 float freq=0.0; //frequency
-
-const unsigned long demoPal [ 7 ] = {
-   0xFFL, //blue
-   0xFF00L, //green
-   0xFFFFL, //cyan
-   0xFF00000L, //red
-   0xFF00FFL, //mauve
-   0xFFFF00L, //yellow
-   0xFFFFFFL}; //white
+int dataNum=0;
+int adc_data_buf[128];
 
 /**
  * main.c
  */
 int main(void)
 {
+    //int adc_data_buf[128];
     int cnt = 1;
+    int i =0;
 	WDTCTL = WDTPW | WDTHOLD;	// stop watchdog timer
 	Clk_initConfig();
 	GPIO_initConfig();
-//	Timer_initConfig();
+	Timer_initConfig();
 	ADC_initConfig();
     SPI_initConfig();
     LCD_initConfig();
-
     LCD_clear();
-	ADC_START;
-	_enable_interrupt();
 	Rotate();
 	show_string(20,115,"Freq:",0xFF,12);
     for(cnt = 160;cnt >=0; cnt--){
-        draw_point(cnt,110,demoPal[6]);
+        draw_point(cnt,110,WHITE);
     }
-	for(;;)
-	{
-	}
+
+    _enable_interrupt();
+    ADC_START;
+    while(1)
+    {
+        if(printFlag==1)
+        {
+            printFlag=-4;
+            float temp;
+            for(cnt=10;cnt<10+128;cnt++)
+            {
+                //draw_point(cnt,adc_data_buf)
+            }
+            //ADC_START;
+        }
+
+    }
 }
 
-
 unsigned short ADC_Buf[16];//contain ADC data
+int adcFlag=0;
 #pragma vector = TIMER0_A1_VECTOR
 __interrupt void TIMER0_ISR(void)
 {
     int i = 0;
-    float sum=0;
+    int sum=0;
     switch(TAIV)
     {
         case 0x0A:
         {
-            for(i =0; i<16;i++)
+            if(adcFlag==1)
             {
-                sum+=(ADC_Buf[i])*(3.3)/1023;
+                adcFlag=0;//receive new data
+
+                for(i =0; i< 16;i++)
+                {
+                    sum = sum + ADC_Buf[i];
+                }
+                adcFlag=1;
+                ADC10SA=(unsigned short)ADC_Buf;
+
+                adc_data_buf[dataNum]=sum/16;
+
+                dataNum++;
+
+                //if the adc_data_buf is not full, continue to sample
+                if(dataNum<128)
+                {
+                    ADC_START;
+                }else
+                {
+                    dataNum = 0;
+                }
+                break;
             }
-            ADC10SA=(unsigned short)ADC_Buf;
-            ADC_START;
-            break;
         }
         default:break;
     }
@@ -75,6 +101,7 @@ __interrupt void TIMER0_ISR(void)
 __interrupt void ADC10_ISR(void)
 {
     ADC10CTL0 &= ~ADC10IFG;//clear ADC interrupt
+    adcFlag=1;
 }
 
 long int posEdgeNum=0;
@@ -90,7 +117,9 @@ __interrupt void TIMER1_ISR(void)
         }
         //overflow
         case 0x0A:
+            freq=posEdgeNum;
             posEdgeNum=0;
+            printFlag ++;
         default:break;
     }
 
