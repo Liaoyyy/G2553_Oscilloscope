@@ -8,6 +8,7 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 #include <msp430.h>
+//ADC input P1.1
 
 #define LCD_RESET_OUTPORT   P1OUT
 #define LCD_RESET_DIRPORT   P1DIR

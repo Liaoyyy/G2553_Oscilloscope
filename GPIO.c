@@ -13,10 +13,6 @@ void GPIO_initConfig(void)
     LCD_SCLK_DIRPORT  |= LCD_SCLK_BIT;
     LCD_SDA_DIRPORT   |= LCD_SDA_BIT;
 
-
-    //LED peripheral configuration
-    P1DIR |= BIT6;
-
     //Timer1 peripheral configuration
     P2SEL |= BIT1;
     P2DIR &= ~BIT1;

@@ -9,24 +9,18 @@
 
 void Clk_initConfig(void);
 
-unsigned short ADC_Buf[16];//contain ADC data
-
-
-float TimerFreq=1000000;//1MHz
-long int pulseStart=0;  //positive edge start time
-long int pulseStop=0;   //next positive edge start time
-int overflowCnt=0; //overflow times
-float period=0; //period length
+int printFlag=-4;
 float freq=0.0; //frequency
 
 const unsigned long demoPal [ 7 ] = {
-   // seven meaningful color codes - BLU GREEN CYAN RED MAUVE YELLOW WHITE
-   0xFFL, 0xFF00L, 0xFFFFL, 0xFF00000L, 0xFF00FFL, 0xFFFF00L, 0xFFFFFFL };
-#define INDEX_MODULUS (sizeof(demoPal) / sizeof(demoPal[0]))
+   0xFFL, //blue
+   0xFF00L, //green
+   0xFFFFL, //cyan
+   0xFF00000L, //red
+   0xFF00FFL, //mauve
+   0xFFFF00L, //yellow
+   0xFFFFFFL}; //white
 
-
-unsigned ColorIndex;  // points into demoPallete[]
-unsigned square_num, offset;
 /**
  * main.c
  */
@@ -37,7 +31,7 @@ int main(void)
 	Clk_initConfig();
 	GPIO_initConfig();
 //	Timer_initConfig();
-//	ADC_initConfig();
+	ADC_initConfig();
     SPI_initConfig();
     LCD_initConfig();
 
@@ -47,7 +41,7 @@ int main(void)
 	Rotate();
 	show_string(20,115,"Freq:",0xFF,12);
     for(cnt = 160;cnt >=0; cnt--){
-        draw_point(cnt,110,demoPal[1]);
+        draw_point(cnt,110,demoPal[6]);
     }
 	for(;;)
 	{
@@ -55,8 +49,7 @@ int main(void)
 }
 
 
-
-//TODO: 数据采样后直接发送？还是用FIFO装后发送？
+unsigned short ADC_Buf[16];//contain ADC data
 #pragma vector = TIMER0_A1_VECTOR
 __interrupt void TIMER0_ISR(void)
 {
@@ -84,8 +77,7 @@ __interrupt void ADC10_ISR(void)
     ADC10CTL0 &= ~ADC10IFG;//clear ADC interrupt
 }
 
-//TODO: optimize the frequency measure part
-int flag=0;
+long int posEdgeNum=0;
 #pragma vector=TIMER1_A1_VECTOR
 __interrupt void TIMER1_ISR(void)
 {
@@ -93,27 +85,12 @@ __interrupt void TIMER1_ISR(void)
     {
         case 0x02:
         {
-            if(flag==0)
-            {
-                pulseStart = TA1CCR1;
-                flag = 1;
-            }
-            else if(flag)
-            {
-                pulseStop = TA1CCR1;
-                period = pulseStop - pulseStart + 65536*overflowCnt;
-                freq = TimerFreq/(float)period;
-                overflowCnt=0;
-                flag = 0;
-            }
+            posEdgeNum++;
             break;
         }
         //overflow
         case 0x0A:
-            if(flag==1){
-                overflowCnt++;
-                break;
-            }
+            posEdgeNum=0;
         default:break;
     }
 
