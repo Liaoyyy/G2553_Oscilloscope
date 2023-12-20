@@ -6,15 +6,21 @@
 #include <LCD.h>
 #include <ADC.h>
 #include <Timer.h>
+#include <stdio.h>
+#include <string.h>
 
 void Clk_initConfig(void);
+void float_to_string(float d, char *p);
 
 //int adc_data_buf[128];//record the voltage data to be printed
 
-int printFlag=-4;
+int printFlag=0;
 float freq=0.0; //frequency
+int printFreqFlag=0;
 int dataNum=0;
 int adc_data_buf[120];
+
+
 
 /**
  * main.c
@@ -32,6 +38,7 @@ int main(void)
     LCD_clear();
 	Rotate();
 	show_string(20,115,"Freq:",0xFF,12);
+	show_string(50,115,"50Hz",0xFF,12);
     for(cnt = 160;cnt >=0; cnt--){
         draw_point(cnt,110,WHITE);
     }
@@ -44,8 +51,10 @@ int main(void)
         {
             //erase the last wave
             draw_rectangle(0,0,162,110,0L);
+            draw_rectangle(50,115,30,70,0L);
 
-            printFlag=-4;
+            //show_string(50,115,"50Hz",0xFF,12);
+            printFlag=0;
             int temp;
             int temp2;
             //_disable_interrupt();
@@ -56,7 +65,14 @@ int main(void)
 
                 draw_line(cnt,cnt+1,temp,temp2,YELLOW);
             }
-            //_enable_interrupt();
+
+            if(printFreqFlag==1)
+            {
+                printFreqFlag=0;
+                char str[6];
+                //sprintf(str,"%.2f",freq);
+                //show_string(50,115,(u8 *)  str,0xFF,12);
+            }
             ADC_START;
         }
 
@@ -111,46 +127,29 @@ __interrupt void ADC10_ISR(void)
     adcFlag=1;
 }
 
-int flag=0;
-float TimerFreq=1000000;//1MHz
-long int pulseStart=0;  //pulse positive edge start time
-long int pulseStop=0;   //next pulse positive edge start time
-int overflowCnt=0; //overflow times
-float period=0; //period length
+long int posEdgeNum=0;
 #pragma vector=TIMER1_A1_VECTOR
-__interrupt void Timer1_A(void)
+__interrupt void TIMER1_ISR(void)
 {
     switch(TA1IV)
     {
         case 0x02:
         {
-            if(flag==0)
-            {
-                pulseStart = TA1CCR1;
-                flag = 1;
-            }
-            else if(flag)
-            {
-                pulseStop = TA1CCR1;
-                period = pulseStop - pulseStart + 65536*overflowCnt;
-                freq = TimerFreq/(float)period;
-                overflowCnt=0;
-                flag = 0;
-            }
+            posEdgeNum++;
             break;
         }
-        //Overflow
+        //overflow
         case 0x0A:
-            if(flag==1){
-                overflowCnt++;
-                break;
-            }
+            freq=posEdgeNum;
+            posEdgeNum=0;
+            printFreqFlag=1;
         default:break;
     }
 
     TA1CCTL1 &= ~CCIFG;
     TA1CTL &= ~TAIFG;//clear interrupts
 }
+
 
 
 void Clk_initConfig(void)
@@ -168,3 +167,5 @@ void delay(int cnt)
       i--;
     } while ( 0 != i);
 }
+
+
