@@ -42,20 +42,18 @@ int main(void)
     {
         if(printFlag==1)
         {
+            //erase the last wave
+            draw_rectangle(0,0,162,110,0L);
+
             printFlag=-4;
             int temp;
             int temp2;
             //_disable_interrupt();
             for(cnt=15;cnt<15+119;cnt++)
             {
-                //erase the last wave
-                //draw_rectangle(0,0,160,110,0L);
-
                 temp=(1024-adc_data_buf[cnt-10])/11+10;
                 temp2=(1024-adc_data_buf[cnt-9])/11+10;
 
-                //adc_last_data_buf[cnt-10]=adc_data_buf[cnt-10];
-                //draw_point(cnt,temp,YELLOW);
                 draw_line(cnt,cnt+1,temp,temp2,YELLOW);
             }
             //_enable_interrupt();
