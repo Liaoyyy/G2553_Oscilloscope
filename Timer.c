@@ -19,14 +19,11 @@ void Timer_initConfig(void)
     //100000Hz interrupt
     TA0CCR0 = 10 - 1;
 
-
-    //use Timer1 to measure the PWM frequency
+    //Timer1
     TA1CTL |= TASSEL_2;//SMCLK 1MHz
-    TA1CTL |= MC_1;//Up to CCR0
-    TA1CTL |= ID_3;//divider 8
+    TA1CTL |= MC_2;//连续计数模式
+    TA1CTL |= ID_0;//1分频
     TA1CTL |= TAIE;
     TA1CCTL1 |= CCIE+CAP+CM_1+SCS+CCIS_0;
-
-    TA0CCR0 = 62500 - 1;
 }
 

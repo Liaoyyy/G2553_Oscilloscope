@@ -111,22 +111,40 @@ __interrupt void ADC10_ISR(void)
     adcFlag=1;
 }
 
-long int posEdgeNum=0;
+int flag=0;
+float TimerFreq=1000000;//1MHz
+long int pulseStart=0;  //pulse positive edge start time
+long int pulseStop=0;   //next pulse positive edge start time
+int overflowCnt=0; //overflow times
+float period=0; //period length
 #pragma vector=TIMER1_A1_VECTOR
-__interrupt void TIMER1_ISR(void)
+__interrupt void Timer1_A(void)
 {
     switch(TA1IV)
     {
         case 0x02:
         {
-            posEdgeNum++;
+            if(flag==0)
+            {
+                pulseStart = TA1CCR1;
+                flag = 1;
+            }
+            else if(flag)
+            {
+                pulseStop = TA1CCR1;
+                period = pulseStop - pulseStart + 65536*overflowCnt;
+                freq = TimerFreq/(float)period;
+                overflowCnt=0;
+                flag = 0;
+            }
             break;
         }
-        //overflow
+        //Overflow
         case 0x0A:
-            freq=posEdgeNum;
-            posEdgeNum=0;
-            printFlag ++;
+            if(flag==1){
+                overflowCnt++;
+                break;
+            }
         default:break;
     }
 
